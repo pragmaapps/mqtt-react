@@ -76,8 +76,15 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
             }
 
             subscribe() {
-                this.client.subscribe(topic);
-                this.setState({ subscribed: true });
+                if (Array.isArray(topic)) {
+                    topic.map((t, key) => {
+                        this.client.subscribe(t);
+                        this.setState({ subscribed: true });
+                    });
+                } else {
+                    this.client.subscribe(topic);
+                    this.setState({ subscribed: true });
+                }
             }
 
             unsubscribe() {
