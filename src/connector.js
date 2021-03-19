@@ -1,4 +1,4 @@
-import {Component, createElement, Children} from "react";
+import { Component, createElement, Children } from "react";
 import PropTypes from 'prop-types';
 import MQTT from "mqtt";
 
@@ -29,21 +29,24 @@ export default class Connector extends Component {
     }
 
     componentWillMount() {
+        console.log('[Connector] componentWillMount');
         const { mqttProps, mqtt } = this.props;
 
+        console.log('[Connector] mqttProps', mqttProps);
         this.mqtt = (mqtt) ? mqtt : MQTT.connect(mqttProps);
 
         this.mqtt.on('connect', this._makeStatusHandler('connected'));
         this.mqtt.on('reconnect', this._makeStatusHandler('reconnect'));
-        this.mqtt.on('close',  this._makeStatusHandler('closed'));
+        this.mqtt.on('close', this._makeStatusHandler('closed'));
         this.mqtt.on('offline', this._makeStatusHandler('offline'));
         this.mqtt.on('error', console.error);
 
 
     }
 
-    componentWillUnmount(){
-        this.mqtt.end();
+    componentWillUnmount() {
+        console.log('[Connector] componentWillUnmount');
+        // this.mqtt.end();
     }
 
     _makeStatusHandler = (status) => {

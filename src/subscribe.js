@@ -80,13 +80,18 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
                 this.client.on('message', this.handler);
             }
 
+            // componentWillMount() {
+            //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
+            //     this.subscribe();
+            // }
+
             componentDidMount() {
-                console.log('[SUBSCRIBE] MQTTSubscriber class componentWillMount method');
+                console.log('[SUBSCRIBE] MQTTSubscriber componentDidMount method');
                 this.subscribe();
             }
 
             componentWillUnmount() {
-                console.log('[SUBSCRIBE] MQTTSubscriber class componentWillUnmount method');
+                console.log('[SUBSCRIBE] MQTTSubscriber componentWillUnmount method');
                 this.unsubscribe();
             }
 
@@ -100,9 +105,8 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
             }
 
             subscribe() {
-                console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method');
-                console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method client', this.client);
-                console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method topic', topic);
+                // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
+                console.log('[SUBSCRIBE] MQTTSubscriber topic', topic);
                 if (Array.isArray(topic)) {
                     // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method if topic is Array', topic);
                     topic.map((t, key) => {
@@ -117,10 +121,9 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
             }
 
             unsubscribe() {
-                console.log('[SUBSCRIBE] MQTTSubscriber class unsubscribe method');
-                console.log('[SUBSCRIBE] MQTTSubscriber class unsubscribe method topic', topic);
+                console.log('[SUBSCRIBE] MQTTSubscriber topic', topic);
                 this.client.unsubscribe(topic);
-                console.log('[SUBSCRIBE] MQTTSubscriber class unsubscribe method client', this.client);
+                // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
                 this.setState({ subscribed: false });
             }
 
