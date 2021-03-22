@@ -21,7 +21,7 @@ function defaultDispatch(topic, message, packet) {
     // console.log('[SUBSCRIBE] defaultDispatch function topic', topic);
     // console.log('[SUBSCRIBE] defaultDispatch function message', message);
     // console.log('[SUBSCRIBE] defaultDispatch function packet', packet);
-    const { state } = this;
+    const { state, _isMounted } = this;
     // console.log('[SUBSCRIBE] defaultDispatch function this', this);
     // console.log('[SUBSCRIBE] defaultDispatch function state', state);
     const m = parse(message);
@@ -46,7 +46,9 @@ function defaultDispatch(topic, message, packet) {
         };
         // console.log('[SUBSCRIBE] defaultDispatch function newData', newData);
     }
-    this.setState({ data: newData });
+    if (_isMounted) {
+        this.setState({ data: newData });
+    }
 };
 
 
@@ -76,22 +78,26 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
                     subscribed: false,
                     data: {},
                 };
+                this._isMounted = false;
                 this.handler = dispatch.bind(this)
                 this.client.on('message', this.handler);
             }
 
+            //needs to verify the solution of use componentDidMount over componentWillMount
             // componentWillMount() {
             //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
             //     this.subscribe();
             // }
 
             componentDidMount() {
-                console.log('[SUBSCRIBE] MQTTSubscriber componentDidMount method');
+                this._isMounted = true;
+                // console.log('[MQTTSubscriber] MQTTSubscriber componentDidMount method');
                 this.subscribe();
             }
 
             componentWillUnmount() {
-                console.log('[SUBSCRIBE] MQTTSubscriber componentWillUnmount method');
+                this._isMounted = false;
+                // console.log('[MQTTSubscriber] MQTTSubscriber componentWillUnmount method');
                 this.unsubscribe();
             }
 
@@ -106,25 +112,29 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
 
             subscribe() {
                 // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
-                console.log('[SUBSCRIBE] MQTTSubscriber topic', topic);
-                if (Array.isArray(topic)) {
-                    // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method if topic is Array', topic);
-                    topic.map((t, key) => {
-                        this.client.subscribe(t);
+                // console.log('[MQTTSubscriber] MQTTSubscriber topic', topic);
+                if (this._isMounted) {
+                    if (Array.isArray(topic)) {
+                        // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method if topic is Array', topic);
+                        topic.map((t, key) => {
+                            this.client.subscribe(t);
+                            this.setState({ subscribed: true });
+                        });
+                    } else {
+                        // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method else this.client', this.client);
+                        this.client.subscribe(topic);
                         this.setState({ subscribed: true });
-                    });
-                } else {
-                    // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method else this.client', this.client);
-                    this.client.subscribe(topic);
-                    this.setState({ subscribed: true });
+                    }
                 }
             }
 
             unsubscribe() {
-                console.log('[SUBSCRIBE] MQTTSubscriber topic', topic);
-                this.client.unsubscribe(topic);
-                // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
-                this.setState({ subscribed: false });
+                if (this._isMounted) {
+                    // console.log('[MQTTSubscriber] MQTTSubscriber topic', topic);
+                    this.client.unsubscribe(topic);
+                    // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
+                    this.setState({ subscribed: false });
+                }
             }
 
         }
