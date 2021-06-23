@@ -8350,60 +8350,41 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function parse(message) {
-    // console.log('[SUBSCRIBE] function parse');
-    // console.log('[SUBSCRIBE] function parse message', message);
     try {
         var item = JSON.parse(message);
-        // console.log('[SUBSCRIBE] function parse item', item);
         return item;
     } catch (e) {
-        // console.log('[SUBSCRIBE] function parse catch block');
         return message.toString();
     }
 }
 
 function defaultDispatch(topic, message, packet) {
-    // console.log('[SUBSCRIBE] defaultDispatch function');
-    // console.log('[SUBSCRIBE] defaultDispatch function topic', topic);
-    // console.log('[SUBSCRIBE] defaultDispatch function message', message);
-    // console.log('[SUBSCRIBE] defaultDispatch function packet', packet);
-    var state = this.state,
-        _isMounted = this._isMounted;
-    // console.log('[SUBSCRIBE] defaultDispatch function this', this);
-    // console.log('[SUBSCRIBE] defaultDispatch function state', state);
+    var state = this.state;
+
 
     var m = parse(message);
-    // console.log('[SUBSCRIBE] defaultDispatch function m', m);
+
     var item = [];
     var newData = {};
     item[topic] = m;
-    // console.log('[SUBSCRIBE] defaultDispatch function item', item);
+
     if (typeof state.data[topic] !== 'undefined') {
-        // console.log('[SUBSCRIBE] defaultDispatch function if topic of data is not undefined');
+
         state.data[topic] = item[topic];
-        // console.log('[SUBSCRIBE] defaultDispatch function if topic of data is not undefined state.data[topic]', state.data[topic]);
+
         newData = _extends({}, state.data);
-        // console.log('[SUBSCRIBE] defaultDispatch function if topic of data is not undefined newData', newData);
     } else {
-        // console.log('[SUBSCRIBE] defaultDispatch function if undefined');
+
         newData = _extends({}, item, state.data);
-        // console.log('[SUBSCRIBE] defaultDispatch function newData', newData);
     }
-    if (_isMounted) {
-        this.setState({ data: newData });
-    }
+    this.setState({ data: newData });
 };
 
 function subscribe() {
     var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { dispatch: defaultDispatch };
-
-    // console.log('[SUBSCRIBE] subscribe function');
-    // console.log('[SUBSCRIBE] subscribe function opts', opts);
     var topic = opts.topic;
-    // console.log('[SUBSCRIBE] subscribe function topic', topic);
 
     var dispatch = opts.dispatch ? opts.dispatch : defaultDispatch;
-    // console.log('[SUBSCRIBE] subscribe function dispatch', dispatch);
 
     return function (TargetComponent) {
         var MQTTSubscriber = function (_Component) {
@@ -8419,36 +8400,24 @@ function subscribe() {
                     subscribed: false,
                     data: {}
                 };
-                _this._isMounted = false;
                 _this.handler = dispatch.bind(_this);
                 _this.client.on('message', _this.handler);
                 return _this;
             }
 
-            //needs to verify the solution of use componentDidMount over componentWillMount
-            // componentWillMount() {
-            //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
-            //     this.subscribe();
-            // }
-
             _createClass(MQTTSubscriber, [{
-                key: "componentDidMount",
-                value: function componentDidMount() {
-                    this._isMounted = true;
-                    // console.log('[MQTTSubscriber] MQTTSubscriber componentDidMount method');
+                key: "componentWillMount",
+                value: function componentWillMount() {
                     this.subscribe();
                 }
             }, {
                 key: "componentWillUnmount",
                 value: function componentWillUnmount() {
-                    this._isMounted = false;
-                    // console.log('[MQTTSubscriber] MQTTSubscriber componentWillUnmount method');
                     this.unsubscribe();
                 }
             }, {
                 key: "render",
                 value: function render() {
-                    // console.log('[SUBSCRIBE] MQTTSubscriber class TargetComponent', TargetComponent);
                     return (0, _react.createElement)(TargetComponent, _extends({}, (0, _object2.default)(this.props, 'client'), {
                         data: this.state.data,
                         mqtt: this.client
@@ -8457,33 +8426,14 @@ function subscribe() {
             }, {
                 key: "subscribe",
                 value: function subscribe() {
-                    var _this2 = this;
-
-                    // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
-                    // console.log('[MQTTSubscriber] MQTTSubscriber topic', topic);
-                    if (this._isMounted) {
-                        if (Array.isArray(topic)) {
-                            // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method if topic is Array', topic);
-                            topic.map(function (t, key) {
-                                _this2.client.subscribe(t);
-                                _this2.setState({ subscribed: true });
-                            });
-                        } else {
-                            // console.log('[SUBSCRIBE] MQTTSubscriber class subscribe method else this.client', this.client);
-                            this.client.subscribe(topic);
-                            this.setState({ subscribed: true });
-                        }
-                    }
+                    this.client.subscribe(topic);
+                    this.setState({ subscribed: true });
                 }
             }, {
                 key: "unsubscribe",
                 value: function unsubscribe() {
-                    if (this._isMounted) {
-                        // console.log('[MQTTSubscriber] MQTTSubscriber topic', topic);
-                        this.client.unsubscribe(topic);
-                        // console.log('[SUBSCRIBE] MQTTSubscriber client', this.client);
-                        this.setState({ subscribed: false });
-                    }
+                    this.client.unsubscribe(topic);
+                    this.setState({ subscribed: false });
                 }
             }]);
 
