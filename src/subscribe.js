@@ -38,7 +38,9 @@ function defaultDispatch(topic, message, packet) {
         };
 
     }
-    this.setState({ data: newData });
+    if(topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get"){
+        this.setState({ data: newData });
+    }
 };
 
 
@@ -68,7 +70,11 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
             }
 
 
-            componentWillMount() {
+            // componentWillMount() {
+            //     this.subscribe();
+            // }
+
+            componentDidMount() {
                 this.subscribe();
             }
 

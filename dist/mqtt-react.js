@@ -8377,7 +8377,9 @@ function defaultDispatch(topic, message, packet) {
 
         newData = _extends({}, item, state.data);
     }
-    this.setState({ data: newData });
+    if (topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get") {
+        this.setState({ data: newData });
+    }
 };
 
 function subscribe() {
@@ -8405,9 +8407,13 @@ function subscribe() {
                 return _this;
             }
 
+            // componentWillMount() {
+            //     this.subscribe();
+            // }
+
             _createClass(MQTTSubscriber, [{
-                key: "componentWillMount",
-                value: function componentWillMount() {
+                key: "componentDidMount",
+                value: function componentDidMount() {
                     this.subscribe();
                 }
             }, {
