@@ -8359,25 +8359,20 @@ function parse(message) {
 }
 
 function defaultDispatch(topic, message, packet) {
-    var state = this.state;
-
+    var state = this.state,
+        _isMounted = this._isMounted;
 
     var m = parse(message);
-
     var item = [];
     var newData = {};
     item[topic] = m;
-
     if (typeof state.data[topic] !== 'undefined') {
-
         state.data[topic] = item[topic];
-
         newData = _extends({}, state.data);
     } else {
-
         newData = _extends({}, item, state.data);
     }
-    if (topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get") {
+    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get") {
         this.setState({ data: newData });
     }
 };
@@ -8402,23 +8397,28 @@ function subscribe() {
                     subscribed: false,
                     data: {}
                 };
+                _this._isMounted = false;
                 _this.handler = dispatch.bind(_this);
                 _this.client.on('message', _this.handler);
                 return _this;
             }
 
+            //needs to verify the solution of use componentDidMount over componentWillMount
             // componentWillMount() {
+            //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
             //     this.subscribe();
             // }
 
             _createClass(MQTTSubscriber, [{
                 key: "componentDidMount",
                 value: function componentDidMount() {
+                    this._isMounted = true;
                     this.subscribe();
                 }
             }, {
                 key: "componentWillUnmount",
                 value: function componentWillUnmount() {
+                    this._isMounted = false;
                     this.unsubscribe();
                 }
             }, {
@@ -8432,14 +8432,27 @@ function subscribe() {
             }, {
                 key: "subscribe",
                 value: function subscribe() {
-                    this.client.subscribe(topic);
-                    this.setState({ subscribed: true });
+                    var _this2 = this;
+
+                    if (this._isMounted) {
+                        if (Array.isArray(topic)) {
+                            topic.map(function (t, key) {
+                                _this2.client.subscribe(t);
+                                _this2.setState({ subscribed: true });
+                            });
+                        } else {
+                            this.client.subscribe(topic);
+                            this.setState({ subscribed: true });
+                        }
+                    }
                 }
             }, {
                 key: "unsubscribe",
                 value: function unsubscribe() {
-                    this.client.unsubscribe(topic);
-                    this.setState({ subscribed: false });
+                    if (this._isMounted) {
+                        this.client.unsubscribe(topic);
+                        this.setState({ subscribed: false });
+                    }
                 }
             }]);
 
