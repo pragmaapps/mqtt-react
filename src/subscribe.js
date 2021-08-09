@@ -29,7 +29,7 @@ function defaultDispatch(topic, message, packet) {
             ...state.data
         };
     }
-    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get") {
+    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
         this.setState({ data: newData });
     }
 };
