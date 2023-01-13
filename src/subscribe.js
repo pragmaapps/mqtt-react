@@ -78,11 +78,19 @@ export default function subscribe(opts = { dispatch: defaultDispatch }) {
                 this.unsubscribe();
             }
 
+            deleteTopic(topic){
+                console.log(topic);
+                let { data } = this.state;
+                delete data[topic];
+                this.setState({data});
+            }
+
             render() {
                 return createElement(TargetComponent, {
                     ...omit(this.props, 'client'),
                     data: this.state.data,
-                    mqtt: this.client
+                    mqtt: this.client,
+                    deleteTopic: this.deleteTopic.bind(this)
                 });
             }
 
