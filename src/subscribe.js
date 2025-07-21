@@ -1,121 +1,108 @@
-import { Component, createElement } from "react";
-import PropTypes from "prop-types";
-import omit from "object.omit";
-
+import React, { useContext, useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+import omit from 'object.omit';
 
 function parse(message) {
-    try {
-        const item = JSON.parse(message);
-        return item;
-    } catch (e) {
-        return message.toString();
-    }
+  try {
+    return JSON.parse(message);
+  } catch (e) {
+    return message.toString();
+  }
 }
 
-function defaultDispatch(topic, message, packet) {
-    const { state, _isMounted } = this;
-    const m = parse(message);
-    const item = [];
-    let newData = {};
-    item[topic] = m;
-    if (typeof state.data[topic] !== 'undefined') {
-        state.data[topic] = item[topic];
-        newData = {
-            ...state.data
-        };
-    } else {
-        newData = {
-            ...item,
-            ...state.data
-        };
-    }
-    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
-        this.setState({ data: newData });
-    }
-};
+function defaultDispatch(topic, message, packet, setData, getDataRef) {
+  const parsed = parse(message);
+  const newTopicData = { [topic]: parsed };
 
+  const existingData = getDataRef.current;
+  let newData;
+
+  if (typeof existingData[topic] !== 'undefined') {
+    existingData[topic] = parsed;
+    newData = { ...existingData };
+  } else {
+    newData = {
+      ...newTopicData,
+      ...existingData,
+    };
+  }
+
+  if (
+    topic !== 'isx/stream/file/stats/get' &&
+    topic !== 'isx/adp/adp/stats/get' &&
+    topic !== 'isx/sensor/status/info/get'
+  ) {
+    setData(newData);
+  }
+}
 
 export default function subscribe(opts = { dispatch: defaultDispatch }) {
-    const { topic } = opts;
-    const dispatch = (opts.dispatch) ? opts.dispatch : defaultDispatch;
+  const { topic, dispatch = defaultDispatch } = opts;
 
-    return (TargetComponent) => {
+  return function withSubscription(TargetComponent) {
+    const MQTTSubscriber = (props) => {
+      const context = useContext(React.createContext()); // fallback context
+      const client = props.client || context.mqtt;
+      const [data, setData] = useState({});
+      const [subscribed, setSubscribed] = useState(false);
+      const getDataRef = React.useRef(data);
+      getDataRef.current = data;
 
-        class MQTTSubscriber extends Component {
-            static propTypes = {
-                client: PropTypes.object
-            }
-            static contextTypes = {
-                mqtt: PropTypes.object
-            };
+      useEffect(() => {
+        if (!client) return;
 
-            constructor(props, context) {
-                super(props, context);
+        const handler = (t, message, packet) => {
+          dispatch(t, message, packet, setData, getDataRef);
+        };
 
-                this.client = props.client || context.mqtt;
-                this.state = {
-                    subscribed: false,
-                    data: {},
-                };
-                this._isMounted = false;
-                this.handler = dispatch.bind(this)
-                this.client.on('message', this.handler);
-            }
+        client.on('message', handler);
 
-            //needs to verify the solution of use componentDidMount over componentWillMount
-            // componentWillMount() {
-            //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
-            //     this.subscribe();
-            // }
+        const subscribeTopics = () => {
+          if (Array.isArray(topic)) {
+            topic.forEach((t) => client.subscribe(t));
+          } else {
+            client.subscribe(topic);
+          }
+          setSubscribed(true);
+        };
 
-            componentDidMount() {
-                this._isMounted = true;
-                this.subscribe();
-            }
+        const unsubscribeTopics = () => {
+          if (Array.isArray(topic)) {
+            topic.forEach((t) => client.unsubscribe(t));
+          } else {
+            client.unsubscribe(topic);
+          }
+          setSubscribed(false);
+        };
 
-            componentWillUnmount() {
-                this._isMounted = false;
-                this.unsubscribe();
-            }
+        subscribeTopics();
 
-            deleteTopic(topic){
-                console.log(topic);
-                let { data } = this.state;
-                delete data[topic];
-                this.setState({data});
-            }
+        return () => {
+          unsubscribeTopics();
+          client.off('message', handler);
+        };
+      }, [client]);
 
-            render() {
-                return createElement(TargetComponent, {
-                    ...omit(this.props, 'client'),
-                    data: this.state.data,
-                    mqtt: this.client,
-                    deleteTopic: this.deleteTopic.bind(this)
-                });
-            }
+      const deleteTopic = (t) => {
+        const newData = { ...data };
+        delete newData[t];
+        setData(newData);
+      };
 
-            subscribe() {
-                if (this._isMounted) {
-                    if (Array.isArray(topic)) {
-                        topic.map((t, key) => {
-                            this.client.subscribe(t);
-                            this.setState({ subscribed: true });
-                        });
-                    } else {
-                        this.client.subscribe(topic);
-                        this.setState({ subscribed: true });
-                    }
-                }
-            }
+      return (
+        <TargetComponent
+          {...omit(props, 'client')}
+          data={data}
+          mqtt={client}
+          deleteTopic={deleteTopic}
+        />
+      );
+    };
 
-            unsubscribe() {
-                if (this._isMounted) {
-                    this.client.unsubscribe(topic);
-                    this.setState({ subscribed: false });
-                }
-            }
+    MQTTSubscriber.propTypes = {
+      client: PropTypes.object,
+    };
 
-        }
-        return MQTTSubscriber;
-    }
+    return MQTTSubscriber;
+  };
 }

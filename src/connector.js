@@ -1,67 +1,51 @@
-import { Component, createElement, Children } from "react";
+import React, { createContext, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import MQTT from "mqtt";
+import MQTT from 'mqtt';
 
-export default class Connector extends Component {
-    static propTypes = {
-        mqqt: PropTypes.object,
-        mqttProps: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-        children: PropTypes.element.isRequired,
+export const MqttContext = createContext({
+  mqtt: null,
+  mqttStatus: null
+});
+
+const Connector = ({ mqttProps, mqtt, children }) => {
+  const [mqttStatus, setMqttStatus] = useState(null);
+  const mqttRef = useRef(null);
+
+  useEffect(() => {
+    console.log('[Connector] initializing MQTT connection');
+    const client = mqtt ? mqtt : MQTT.connect(mqttProps);
+    mqttRef.current = client;
+
+    const handleStatus = (status) => () => {
+      setMqttStatus(status);
     };
 
-    static childContextTypes = {
-        mqtt: PropTypes.object,
-        mqttStatus: PropTypes.string
+    client.on('connect', handleStatus('connected'));
+    client.on('reconnect', handleStatus('reconnect'));
+    client.on('close', handleStatus('closed'));
+    client.on('offline', handleStatus('offline'));
+    client.on('error', console.error);
+
+    return () => {
+      console.log('[Connector] cleaning up MQTT connection');
+      // Uncomment below if you want to close connection on unmount
+      // client.end();
     };
+  }, [mqttProps, mqtt]);
 
-    constructor(props, context) {
-        super(props, context);
+  return (
+    <MqttContext.Provider
+      value={{ mqtt: mqttRef.current, mqttStatus }}
+    >
+      {children}
+    </MqttContext.Provider>
+  );
+};
 
-        const initialState = {};
-        this.state = initialState;
-    }
+Connector.propTypes = {
+  mqtt: PropTypes.object,
+  mqttProps: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  children: PropTypes.element.isRequired
+};
 
-    getChildContext() {
-        return {
-            mqtt: this.mqtt,
-            mqttStatus: this.state.mqttStatus
-        };
-    }
-
-    componentWillMount() {
-        console.log('[Connector] componentWillMount');
-        const { mqttProps, mqtt } = this.props;
-
-        console.log('[Connector] mqttProps', mqttProps);
-        this.mqtt = (mqtt) ? mqtt : MQTT.connect(mqttProps);
-
-        this.mqtt.on('connect', this._makeStatusHandler('connected'));
-        this.mqtt.on('reconnect', this._makeStatusHandler('reconnect'));
-        this.mqtt.on('close', this._makeStatusHandler('closed'));
-        this.mqtt.on('offline', this._makeStatusHandler('offline'));
-        this.mqtt.on('error', console.error);
-
-
-    }
-
-    componentWillUnmount() {
-        console.log('[Connector] componentWillUnmount');
-        // this.mqtt.end();
-    }
-
-    _makeStatusHandler = (status) => {
-        return () => {
-            this.setState({ mqttStatus: status })
-        }
-    };
-
-    render() {
-        return this.renderConnected();
-    }
-
-    renderConnected() {
-        return Children.only(this.props.children);
-    }
-
-
-}
+export default Connector;
