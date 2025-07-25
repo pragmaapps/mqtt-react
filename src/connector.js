@@ -1,51 +1,47 @@
-import React, { createContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useState, useEffect, Children } from "react";
 import PropTypes from 'prop-types';
-import MQTT from 'mqtt';
+import MQTT from "mqtt";
 
-export const MqttContext = createContext({
-  mqtt: null,
-  mqttStatus: null
+export const MQTTContext = createContext({
+    mqtt: null,
+    mqttStatus: ''
 });
 
-const Connector = ({ mqttProps, mqtt, children }) => {
-  const [mqttStatus, setMqttStatus] = useState(null);
-  const mqttRef = useRef(null);
+const Connector = ({ mqtt: mqttProp, mqttProps, children }) => {
+    const [mqttStatus, setMqttStatus] = useState('');
+    const [mqtt, setMqtt] = useState(null);
 
-  useEffect(() => {
-    console.log('[Connector] initializing MQTT connection');
-    const client = mqtt ? mqtt : MQTT.connect(mqttProps);
-    mqttRef.current = client;
+    useEffect(() => {
+        const client = mqttProp ? mqttProp : MQTT.connect(mqttProps);
 
-    const handleStatus = (status) => () => {
-      setMqttStatus(status);
-    };
+        const makeStatusHandler = (status) => () => {
+            setMqttStatus(status);
+        };
 
-    client.on('connect', handleStatus('connected'));
-    client.on('reconnect', handleStatus('reconnect'));
-    client.on('close', handleStatus('closed'));
-    client.on('offline', handleStatus('offline'));
-    client.on('error', console.error);
+        client.on('connect', makeStatusHandler('connected'));
+        client.on('reconnect', makeStatusHandler('reconnect'));
+        client.on('close', makeStatusHandler('closed'));
+        client.on('offline', makeStatusHandler('offline'));
+        client.on('error', console.error);
 
-    return () => {
-      console.log('[Connector] cleaning up MQTT connection');
-      // Uncomment below if you want to close connection on unmount
-      // client.end();
-    };
-  }, [mqttProps, mqtt]);
+        setMqtt(client);
 
-  return (
-    <MqttContext.Provider
-      value={{ mqtt: mqttRef.current, mqttStatus }}
-    >
-      {children}
-    </MqttContext.Provider>
-  );
+        return () => {
+            // client.end(); // Uncomment if you want to close connection on unmount
+        };
+    }, [mqttProp, mqttProps]);
+
+    return (
+        <MQTTContext.Provider value={{ mqtt, mqttStatus }}>
+            {Children.only(children)}
+        </MQTTContext.Provider>
+    );
 };
 
 Connector.propTypes = {
-  mqtt: PropTypes.object,
-  mqttProps: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  children: PropTypes.element.isRequired
+    mqtt: PropTypes.object,
+    mqttProps: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    children: PropTypes.element.isRequired,
 };
 
 export default Connector;

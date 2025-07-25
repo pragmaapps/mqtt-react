@@ -273,7 +273,7 @@ process.umask = function() { return 0; };
 
 var base64 = __webpack_require__(32)
 var ieee754 = __webpack_require__(40)
-var isArray = __webpack_require__(13)
+var isArray = __webpack_require__(14)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -2142,8 +2142,8 @@ var util = __webpack_require__(5);
 util.inherits = __webpack_require__(2);
 /*</replacement>*/
 
-var Readable = __webpack_require__(22);
-var Writable = __webpack_require__(24);
+var Readable = __webpack_require__(23);
+var Writable = __webpack_require__(25);
 
 util.inherits(Duplex, Readable);
 
@@ -2674,12 +2674,12 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(22);
+exports = module.exports = __webpack_require__(23);
 exports.Stream = exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(24);
+exports.Writable = __webpack_require__(25);
 exports.Duplex = __webpack_require__(4);
-exports.Transform = __webpack_require__(23);
+exports.Transform = __webpack_require__(24);
 exports.PassThrough = __webpack_require__(64);
 
 
@@ -2866,6 +2866,91 @@ module.exports = ReactPropTypesSecret;
 
 /***/ }),
 /* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.MQTTContext = undefined;
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _react = __webpack_require__(29);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(20);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _mqtt = __webpack_require__(48);
+
+var _mqtt2 = _interopRequireDefault(_mqtt);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var MQTTContext = exports.MQTTContext = (0, _react.createContext)({
+    mqtt: null,
+    mqttStatus: ''
+});
+
+var Connector = function Connector(_ref) {
+    var mqttProp = _ref.mqtt,
+        mqttProps = _ref.mqttProps,
+        children = _ref.children;
+
+    var _useState = (0, _react.useState)(''),
+        _useState2 = _slicedToArray(_useState, 2),
+        mqttStatus = _useState2[0],
+        setMqttStatus = _useState2[1];
+
+    var _useState3 = (0, _react.useState)(null),
+        _useState4 = _slicedToArray(_useState3, 2),
+        mqtt = _useState4[0],
+        setMqtt = _useState4[1];
+
+    (0, _react.useEffect)(function () {
+        var client = mqttProp ? mqttProp : _mqtt2.default.connect(mqttProps);
+
+        var makeStatusHandler = function makeStatusHandler(status) {
+            return function () {
+                setMqttStatus(status);
+            };
+        };
+
+        client.on('connect', makeStatusHandler('connected'));
+        client.on('reconnect', makeStatusHandler('reconnect'));
+        client.on('close', makeStatusHandler('closed'));
+        client.on('offline', makeStatusHandler('offline'));
+        client.on('error', console.error);
+
+        setMqtt(client);
+
+        return function () {
+            // client.end(); // Uncomment if you want to close connection on unmount
+        };
+    }, [mqttProp, mqttProps]);
+
+    return _react2.default.createElement(
+        MQTTContext.Provider,
+        { value: { mqtt: mqtt, mqttStatus: mqttStatus } },
+        _react.Children.only(children)
+    );
+};
+
+Connector.propTypes = {
+    mqtt: _propTypes2.default.object,
+    mqttProps: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.object]),
+    children: _propTypes2.default.element.isRequired
+};
+
+exports.default = Connector;
+
+/***/ }),
+/* 14 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -2876,7 +2961,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2994,13 +3079,13 @@ protocol.EMPTY = {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var protocol = __webpack_require__(14)
+var protocol = __webpack_require__(15)
 var Buffer = __webpack_require__(7).Buffer
 var empty = Buffer.allocUnsafe(0)
 var zeroBuf = Buffer.from([0])
@@ -3549,7 +3634,7 @@ module.exports = generate
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3575,14 +3660,14 @@ module.exports = buildBuilder
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var websocket = __webpack_require__(76)
-var urlModule = __webpack_require__(26)
+var urlModule = __webpack_require__(27)
 var WSS_OPTIONS = [
   'rejectUnauthorized',
   'ca',
@@ -3675,7 +3760,7 @@ if (IS_BROWSER) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright Joyent, Inc. and other Node contributors.
@@ -3902,7 +3987,7 @@ function base64DetectIncompleteChar(buffer) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/**
@@ -3913,7 +3998,7 @@ function base64DetectIncompleteChar(buffer) {
  */
 
 if (process.env.NODE_ENV !== 'production') {
-  var ReactIs = __webpack_require__(21);
+  var ReactIs = __webpack_require__(22);
 
   // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
@@ -3928,14 +4013,14 @@ if (process.env.NODE_ENV !== 'production') {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = Function.call.bind(Object.prototype.hasOwnProperty);
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3950,7 +4035,7 @@ if (process.env.NODE_ENV === 'production') {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3963,7 +4048,7 @@ var processNextTick = __webpack_require__(8);
 /*</replacement>*/
 
 /*<replacement>*/
-var isArray = __webpack_require__(13);
+var isArray = __webpack_require__(14);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -3981,7 +4066,7 @@ var EElistenerCount = function (emitter, type) {
 /*</replacement>*/
 
 /*<replacement>*/
-var Stream = __webpack_require__(25);
+var Stream = __webpack_require__(26);
 /*</replacement>*/
 
 var Buffer = __webpack_require__(1).Buffer;
@@ -4088,7 +4173,7 @@ function ReadableState(options, stream) {
   this.decoder = null;
   this.encoding = null;
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(18).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(19).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -4198,7 +4283,7 @@ function needMoreData(state) {
 
 // backwards compatibility.
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(18).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(19).StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
   return this;
@@ -4892,7 +4977,7 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5080,7 +5165,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5118,7 +5203,7 @@ var internalUtil = {
 /*</replacement>*/
 
 /*<replacement>*/
-var Stream = __webpack_require__(25);
+var Stream = __webpack_require__(26);
 /*</replacement>*/
 
 var Buffer = __webpack_require__(1).Buffer;
@@ -5631,14 +5716,14 @@ function CorkedRequest(state) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(69).setImmediate))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(6).EventEmitter;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6377,7 +6462,7 @@ Url.prototype.parseHost = function() {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -6416,96 +6501,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 module.exports = react;
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.MqttContext = undefined;
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _react = __webpack_require__(28);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(19);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _mqtt = __webpack_require__(48);
-
-var _mqtt2 = _interopRequireDefault(_mqtt);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var MqttContext = exports.MqttContext = (0, _react.createContext)({
-  mqtt: null,
-  mqttStatus: null
-});
-
-var Connector = function Connector(_ref) {
-  var mqttProps = _ref.mqttProps,
-      mqtt = _ref.mqtt,
-      children = _ref.children;
-
-  var _useState = (0, _react.useState)(null),
-      _useState2 = _slicedToArray(_useState, 2),
-      mqttStatus = _useState2[0],
-      setMqttStatus = _useState2[1];
-
-  var mqttRef = (0, _react.useRef)(null);
-
-  (0, _react.useEffect)(function () {
-    console.log('[Connector] initializing MQTT connection');
-    var client = mqtt ? mqtt : _mqtt2.default.connect(mqttProps);
-    mqttRef.current = client;
-
-    var handleStatus = function handleStatus(status) {
-      return function () {
-        setMqttStatus(status);
-      };
-    };
-
-    client.on('connect', handleStatus('connected'));
-    client.on('reconnect', handleStatus('reconnect'));
-    client.on('close', handleStatus('closed'));
-    client.on('offline', handleStatus('offline'));
-    client.on('error', console.error);
-
-    return function () {
-      console.log('[Connector] cleaning up MQTT connection');
-      // Uncomment below if you want to close connection on unmount
-      // client.end();
-    };
-  }, [mqttProps, mqtt]);
-
-  return _react2.default.createElement(
-    MqttContext.Provider,
-    {
-      value: { mqtt: mqttRef.current, mqttStatus: mqttStatus }
-    },
-    children
-  );
-};
-
-Connector.propTypes = {
-  mqtt: _propTypes2.default.object,
-  mqttProps: _propTypes2.default.oneOfType([_propTypes2.default.string, _propTypes2.default.object]),
-  children: _propTypes2.default.element.isRequired
-};
-
-exports.default = Connector;
 
 /***/ }),
 /* 30 */
@@ -6515,7 +6514,7 @@ exports.default = Connector;
 
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
@@ -6524,11 +6523,11 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.default = subscribe;
 
-var _react = __webpack_require__(28);
+var _react = __webpack_require__(29);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _propTypes = __webpack_require__(19);
+var _propTypes = __webpack_require__(20);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
@@ -6536,120 +6535,131 @@ var _object = __webpack_require__(52);
 
 var _object2 = _interopRequireDefault(_object);
 
+var _connector = __webpack_require__(13);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function parse(message) {
-  try {
-    return JSON.parse(message);
-  } catch (e) {
-    return message.toString();
-  }
+    try {
+        var item = JSON.parse(message);
+        return item;
+    } catch (e) {
+        return message.toString();
+    }
 }
 
-function defaultDispatch(topic, message, packet, setData, getDataRef) {
-  var parsed = parse(message);
-  var newTopicData = _defineProperty({}, topic, parsed);
+function defaultDispatch(topic, message, packet) {
+    var state = this.state,
+        _isMounted = this._isMounted;
 
-  var existingData = getDataRef.current;
-  var newData = void 0;
-
-  if (typeof existingData[topic] !== 'undefined') {
-    existingData[topic] = parsed;
-    newData = _extends({}, existingData);
-  } else {
-    newData = _extends({}, newTopicData, existingData);
-  }
-
-  if (topic !== 'isx/stream/file/stats/get' && topic !== 'isx/adp/adp/stats/get' && topic !== 'isx/sensor/status/info/get') {
-    setData(newData);
-  }
-}
+    var m = parse(message);
+    var item = [];
+    var newData = {};
+    item[topic] = m;
+    if (typeof state.data[topic] !== 'undefined') {
+        state.data[topic] = item[topic];
+        newData = _extends({}, state.data);
+    } else {
+        newData = _extends({}, item, state.data);
+    }
+    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
+        this.setState({ data: newData });
+    }
+};
 
 function subscribe() {
-  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { dispatch: defaultDispatch };
-  var topic = opts.topic,
-      _opts$dispatch = opts.dispatch,
-      dispatch = _opts$dispatch === undefined ? defaultDispatch : _opts$dispatch;
+    var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { dispatch: defaultDispatch };
+    var topic = opts.topic;
 
+    var dispatch = opts.dispatch ? opts.dispatch : defaultDispatch;
 
-  return function withSubscription(TargetComponent) {
-    var MQTTSubscriber = function MQTTSubscriber(props) {
-      var context = (0, _react.useContext)(_react2.default.createContext()); // fallback context
-      var client = props.client || context.mqtt;
+    return function (TargetComponent) {
+        var MQTTSubscriber = function MQTTSubscriber(props) {
+            var contextMqtt = (0, _react.useContext)(_connector.MQTTContext).mqtt;
+            var client = props.client || contextMqtt;
 
-      var _useState = (0, _react.useState)({}),
-          _useState2 = _slicedToArray(_useState, 2),
-          data = _useState2[0],
-          setData = _useState2[1];
+            var _useState = (0, _react.useState)(false),
+                _useState2 = _slicedToArray(_useState, 2),
+                subscribed = _useState2[0],
+                setSubscribed = _useState2[1];
 
-      var _useState3 = (0, _react.useState)(false),
-          _useState4 = _slicedToArray(_useState3, 2),
-          subscribed = _useState4[0],
-          setSubscribed = _useState4[1];
+            var _useState3 = (0, _react.useState)({}),
+                _useState4 = _slicedToArray(_useState3, 2),
+                data = _useState4[0],
+                setData = _useState4[1];
 
-      var getDataRef = _react2.default.useRef(data);
-      getDataRef.current = data;
+            var isMounted = (0, _react.useRef)(false);
 
-      (0, _react.useEffect)(function () {
-        if (!client) return;
+            // Using a ref to hold data state for dispatch function
+            var dataRef = (0, _react.useRef)(data);
+            dataRef.current = data;
 
-        var handler = function handler(t, message, packet) {
-          dispatch(t, message, packet, setData, getDataRef);
+            // Using a ref to hold isMounted flag for dispatch function
+            var isMountedRef = (0, _react.useRef)(isMounted.current);
+
+            // Dispatch handler bound to component state and refs
+            var handler = function handler(topic, message, packet) {
+                var m = parse(message);
+                var item = [];
+                var newData = {};
+                item[topic] = m;
+                if (typeof dataRef.current[topic] !== 'undefined') {
+                    dataRef.current[topic] = item[topic];
+                    newData = _extends({}, dataRef.current);
+                } else {
+                    newData = _extends({}, item, dataRef.current);
+                }
+                if (isMountedRef.current && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
+                    setData(newData);
+                }
+            };
+
+            (0, _react.useEffect)(function () {
+                isMounted.current = true;
+                isMountedRef.current = true;
+
+                client.on('message', handler);
+
+                if (Array.isArray(topic)) {
+                    topic.forEach(function (t) {
+                        return client.subscribe(t);
+                    });
+                } else {
+                    client.subscribe(topic);
+                }
+                setSubscribed(true);
+
+                return function () {
+                    isMounted.current = false;
+                    isMountedRef.current = false;
+
+                    client.off('message', handler);
+                    client.unsubscribe(topic);
+                    setSubscribed(false);
+                };
+            }, [client, topic]);
+
+            var deleteTopic = function deleteTopic(topicToDelete) {
+                setData(function (prevData) {
+                    var newData = _extends({}, prevData);
+                    delete newData[topicToDelete];
+                    return newData;
+                });
+            };
+
+            return _react2.default.createElement(TargetComponent, _extends({}, (0, _object2.default)(props, 'client'), {
+                data: data,
+                mqtt: client,
+                deleteTopic: deleteTopic
+            }));
         };
 
-        client.on('message', handler);
-
-        var subscribeTopics = function subscribeTopics() {
-          if (Array.isArray(topic)) {
-            topic.forEach(function (t) {
-              return client.subscribe(t);
-            });
-          } else {
-            client.subscribe(topic);
-          }
-          setSubscribed(true);
+        MQTTSubscriber.propTypes = {
+            client: _propTypes2.default.object
         };
 
-        var unsubscribeTopics = function unsubscribeTopics() {
-          if (Array.isArray(topic)) {
-            topic.forEach(function (t) {
-              return client.unsubscribe(t);
-            });
-          } else {
-            client.unsubscribe(topic);
-          }
-          setSubscribed(false);
-        };
-
-        subscribeTopics();
-
-        return function () {
-          unsubscribeTopics();
-          client.off('message', handler);
-        };
-      }, [client]);
-
-      var deleteTopic = function deleteTopic(t) {
-        var newData = _extends({}, data);
-        delete newData[t];
-        setData(newData);
-      };
-
-      return _react2.default.createElement(TargetComponent, _extends({}, (0, _object2.default)(props, 'client'), {
-        data: data,
-        mqtt: client,
-        deleteTopic: deleteTopic
-      }));
+        return MQTTSubscriber;
     };
-
-    MQTTSubscriber.propTypes = {
-      client: _propTypes2.default.object
-    };
-
-    return MQTTSubscriber;
-  };
 }
 
 /***/ }),
@@ -6664,7 +6674,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.subscribe = exports.Connector = undefined;
 
-var _connector = __webpack_require__(29);
+var _connector = __webpack_require__(13);
 
 var _connector2 = _interopRequireDefault(_connector);
 
@@ -7401,7 +7411,7 @@ module.exports = eos;
 /* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(27)
+var wrappy = __webpack_require__(28)
 module.exports = wrappy(once)
 
 once.proto = once(function () {
@@ -7680,7 +7690,7 @@ module.exports = function isExtendable(val) {
 
 
 var Buffer = __webpack_require__(7).Buffer
-var writeToStream = __webpack_require__(15)
+var writeToStream = __webpack_require__(16)
 var EE = __webpack_require__(6).EventEmitter
 var inherits = __webpack_require__(2)
 
@@ -7744,7 +7754,7 @@ module.exports = generate
 
 exports.parser = __webpack_require__(46)
 exports.generate = __webpack_require__(42)
-exports.writeToStream = __webpack_require__(15)
+exports.writeToStream = __webpack_require__(16)
 
 
 /***/ }),
@@ -7798,7 +7808,7 @@ var bl = __webpack_require__(33)
 var inherits = __webpack_require__(2)
 var EE = __webpack_require__(6).EventEmitter
 var Packet = __webpack_require__(45)
-var constants = __webpack_require__(14)
+var constants = __webpack_require__(15)
 
 function Parser () {
   if (!(this instanceof Parser)) return new Parser()
@@ -9128,20 +9138,20 @@ module.exports = MqttClient
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var MqttClient = __webpack_require__(47)
-var url = __webpack_require__(26)
+var url = __webpack_require__(27)
 var xtend = __webpack_require__(78)
 var protocols = {}
 
 if (process.title !== 'browser') {
-  protocols.mqtt = __webpack_require__(16)
-  protocols.tcp = __webpack_require__(16)
+  protocols.mqtt = __webpack_require__(17)
+  protocols.tcp = __webpack_require__(17)
   protocols.ssl = __webpack_require__(11)
   protocols.tls = __webpack_require__(11)
   protocols.mqtts = __webpack_require__(11)
 }
 
-protocols.ws = __webpack_require__(17)
-protocols.wss = __webpack_require__(17)
+protocols.ws = __webpack_require__(18)
+protocols.wss = __webpack_require__(18)
 
 /**
  * Parse the auth attribute and merge username and password in the options object.
@@ -9598,7 +9608,7 @@ module.exports = function omit(obj, keys) {
 /* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(27)
+var wrappy = __webpack_require__(28)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -9661,7 +9671,7 @@ var printWarning = function() {};
 if (process.env.NODE_ENV !== 'production') {
   var ReactPropTypesSecret = __webpack_require__(12);
   var loggedTypeFailures = {};
-  var has = __webpack_require__(20);
+  var has = __webpack_require__(21);
 
   printWarning = function(text) {
     var message = 'Warning: ' + text;
@@ -9839,11 +9849,11 @@ module.exports = function() {
 
 
 
-var ReactIs = __webpack_require__(21);
+var ReactIs = __webpack_require__(22);
 var assign = __webpack_require__(51);
 
 var ReactPropTypesSecret = __webpack_require__(12);
-var has = __webpack_require__(20);
+var has = __webpack_require__(21);
 var checkPropTypes = __webpack_require__(54);
 
 var printWarning = function() {};
@@ -11407,7 +11417,7 @@ module.exports = __webpack_require__(4);
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(23);
+var Transform = __webpack_require__(24);
 
 /*<replacement>*/
 var util = __webpack_require__(5);

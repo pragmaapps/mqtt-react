@@ -1,108 +1,126 @@
-import React, { useContext, useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import omit from 'object.omit';
+import React, { useContext, useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import omit from "object.omit";
+import { MQTTContext } from "./connector";
 
 function parse(message) {
-  try {
-    return JSON.parse(message);
-  } catch (e) {
-    return message.toString();
-  }
+    try {
+        const item = JSON.parse(message);
+        return item;
+    } catch (e) {
+        return message.toString();
+    }
 }
 
-function defaultDispatch(topic, message, packet, setData, getDataRef) {
-  const parsed = parse(message);
-  const newTopicData = { [topic]: parsed };
-
-  const existingData = getDataRef.current;
-  let newData;
-
-  if (typeof existingData[topic] !== 'undefined') {
-    existingData[topic] = parsed;
-    newData = { ...existingData };
-  } else {
-    newData = {
-      ...newTopicData,
-      ...existingData,
-    };
-  }
-
-  if (
-    topic !== 'isx/stream/file/stats/get' &&
-    topic !== 'isx/adp/adp/stats/get' &&
-    topic !== 'isx/sensor/status/info/get'
-  ) {
-    setData(newData);
-  }
-}
+function defaultDispatch(topic, message, packet) {
+    const { state, _isMounted } = this;
+    const m = parse(message);
+    const item = [];
+    let newData = {};
+    item[topic] = m;
+    if (typeof state.data[topic] !== 'undefined') {
+        state.data[topic] = item[topic];
+        newData = {
+            ...state.data
+        };
+    } else {
+        newData = {
+            ...item,
+            ...state.data
+        };
+    }
+    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
+        this.setState({ data: newData });
+    }
+};
 
 export default function subscribe(opts = { dispatch: defaultDispatch }) {
-  const { topic, dispatch = defaultDispatch } = opts;
+    const { topic } = opts;
+    const dispatch = opts.dispatch ? opts.dispatch : defaultDispatch;
 
-  return function withSubscription(TargetComponent) {
-    const MQTTSubscriber = (props) => {
-      const context = useContext(React.createContext()); // fallback context
-      const client = props.client || context.mqtt;
-      const [data, setData] = useState({});
-      const [subscribed, setSubscribed] = useState(false);
-      const getDataRef = React.useRef(data);
-      getDataRef.current = data;
+    return (TargetComponent) => {
+        const MQTTSubscriber = (props) => {
+            const contextMqtt = useContext(MQTTContext).mqtt;
+            const client = props.client || contextMqtt;
 
-      useEffect(() => {
-        if (!client) return;
+            const [subscribed, setSubscribed] = useState(false);
+            const [data, setData] = useState({});
+            const isMounted = useRef(false);
 
-        const handler = (t, message, packet) => {
-          dispatch(t, message, packet, setData, getDataRef);
+            // Using a ref to hold data state for dispatch function
+            const dataRef = useRef(data);
+            dataRef.current = data;
+
+            // Using a ref to hold isMounted flag for dispatch function
+            const isMountedRef = useRef(isMounted.current);
+
+            // Dispatch handler bound to component state and refs
+            const handler = (topic, message, packet) => {
+                const m = parse(message);
+                const item = [];
+                let newData = {};
+                item[topic] = m;
+                if (typeof dataRef.current[topic] !== 'undefined') {
+                    dataRef.current[topic] = item[topic];
+                    newData = {
+                        ...dataRef.current
+                    };
+                } else {
+                    newData = {
+                        ...item,
+                        ...dataRef.current
+                    };
+                }
+                if (isMountedRef.current && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
+                    setData(newData);
+                }
+            };
+
+            useEffect(() => {
+                isMounted.current = true;
+                isMountedRef.current = true;
+
+                client.on('message', handler);
+
+                if (Array.isArray(topic)) {
+                    topic.forEach(t => client.subscribe(t));
+                } else {
+                    client.subscribe(topic);
+                }
+                setSubscribed(true);
+
+                return () => {
+                    isMounted.current = false;
+                    isMountedRef.current = false;
+
+                    client.off('message', handler);
+                    client.unsubscribe(topic);
+                    setSubscribed(false);
+                };
+            }, [client, topic]);
+
+            const deleteTopic = (topicToDelete) => {
+                setData(prevData => {
+                    const newData = { ...prevData };
+                    delete newData[topicToDelete];
+                    return newData;
+                });
+            };
+
+            return (
+                <TargetComponent
+                    {...omit(props, 'client')}
+                    data={data}
+                    mqtt={client}
+                    deleteTopic={deleteTopic}
+                />
+            );
         };
 
-        client.on('message', handler);
-
-        const subscribeTopics = () => {
-          if (Array.isArray(topic)) {
-            topic.forEach((t) => client.subscribe(t));
-          } else {
-            client.subscribe(topic);
-          }
-          setSubscribed(true);
+        MQTTSubscriber.propTypes = {
+            client: PropTypes.object
         };
 
-        const unsubscribeTopics = () => {
-          if (Array.isArray(topic)) {
-            topic.forEach((t) => client.unsubscribe(t));
-          } else {
-            client.unsubscribe(topic);
-          }
-          setSubscribed(false);
-        };
-
-        subscribeTopics();
-
-        return () => {
-          unsubscribeTopics();
-          client.off('message', handler);
-        };
-      }, [client]);
-
-      const deleteTopic = (t) => {
-        const newData = { ...data };
-        delete newData[t];
-        setData(newData);
-      };
-
-      return (
-        <TargetComponent
-          {...omit(props, 'client')}
-          data={data}
-          mqtt={client}
-          deleteTopic={deleteTopic}
-        />
-      );
+        return MQTTSubscriber;
     };
-
-    MQTTSubscriber.propTypes = {
-      client: PropTypes.object,
-    };
-
-    return MQTTSubscriber;
-  };
 }
