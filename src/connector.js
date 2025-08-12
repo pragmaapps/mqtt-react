@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import mqtt from "mqtt";
 
 export const MQTTContext = createContext({
-    mqtt: null,
+    MQTT: null,
     mqttStatus: ''
 });
 
 const Connector = ({ mqtt: mqttProp, mqttProps, children }) => {
     const [mqttStatus, setMqttStatus] = useState('');
-    const [mqtt, setMqtt] = useState(null);
+    const [MQTT, setMqtt] = useState(null);
 
     useEffect(() => {
         const client = mqttProp ? mqttProp : mqtt.connect(mqttProps);
@@ -32,7 +32,7 @@ const Connector = ({ mqtt: mqttProp, mqttProps, children }) => {
     }, [mqttProp, mqttProps]);
 
     return (
-        <MQTTContext.Provider value={{ mqtt, mqttStatus }}>
+        <MQTTContext.Provider value={{ MQTT, mqttStatus }}>
             {Children.only(children)}
         </MQTTContext.Provider>
     );
