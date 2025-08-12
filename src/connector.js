@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, Children } from "react";
 import PropTypes from 'prop-types';
-import MQTT from "mqtt";
+import mqtt from "mqtt";
 
 export const MQTTContext = createContext({
     mqtt: null,
@@ -12,7 +12,7 @@ const Connector = ({ mqtt: mqttProp, mqttProps, children }) => {
     const [mqtt, setMqtt] = useState(null);
 
     useEffect(() => {
-        const client = mqttProp ? mqttProp : MQTT.connect(mqttProps);
+        const client = mqttProp ? mqttProp : mqtt.connect(mqttProps);
         console.log("[Connector][MQTT CLIENT] [UPGRADE] : ", mqttProps);   
         const makeStatusHandler = (status) => () => {
             setMqttStatus(status);
