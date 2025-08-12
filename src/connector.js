@@ -13,7 +13,7 @@ const Connector = ({ mqtt: mqttProp, mqttProps, children }) => {
 
     useEffect(() => {
         const client = mqttProp ? mqttProp : MQTT.connect(mqttProps);
-
+        console.log("[Connector][MQTT CLIENT] [UPGRADE] : ", mqttProps);   
         const makeStatusHandler = (status) => () => {
             setMqttStatus(status);
         };
