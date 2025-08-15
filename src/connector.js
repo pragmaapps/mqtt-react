@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext } from "react";
 import PropTypes from 'prop-types';
-import MQTT from 'mqtt';
-console.log("[MQTT] [CONNECTOR] LINK Upgrade outside function : ", MQTT);
+import mqtt from 'mqtt';
+
 // Context creation to provide MQTT client and status
 export const MqttContext = createContext(null);
 
@@ -10,65 +10,60 @@ export default function Connector({ mqqt, mqttProps, children }) {
     const [mqttClient, setMqttClient] = useState(null);
     const [mqttStatus, setMqttStatus] = useState('disconnected');
 
-    const _makeStatusHandler = (status) => {
-        console.log(`[MQTT] [CONNECTOR] Status changed to: ${status}`);
-        return () => {
-            setMqttStatus(status);
-        };
-    };
+    // useEffect hook to handle connection and disconnection logic
+    useEffect(() => {
+        if (!mqttProps) {
+            console.error("[MQTT] [CONNECTOR] mqttProps are not provided.");
+            return;
+        }
 
-    const componentWillMount = () => {
-        console.log("[MQTT] [CONNECTOR] mqttProps : ", mqttProps);
-        const client = mqqt || MQTT.connect(mqttProps);
+        // MQTT v5 ke anusaar connect function ka upyog
+        const client = mqtt.connect(mqttProps);
+
+        console.log("[MQTT] [CONNECTOR] Client created:", client);
         setMqttClient(client);
 
-        client.on('connect', _makeStatusHandler('connected'));
-        client.on('reconnect', _makeStatusHandler('reconnect'));
-        client.on('close', _makeStatusHandler('closed'));
-        client.on('offline', _makeStatusHandler('offline'));
-        client.on('error', console.error);
+        // Event handlers
+        const handleStatusChange = (status) => () => {
+            console.log(`[MQTT] [CONNECTOR] Status changed to: ${status}`);
+            setMqttStatus(status);
+        };
 
-        return client;
-    };
+        client.on('connect', handleStatusChange('connected'));
+        client.on('reconnect', handleStatusChange('reconnect'));
+        client.on('close', handleStatusChange('closed'));
+        client.on('offline', handleStatusChange('offline'));
+        client.on('error', (err) => {
+            console.error("[MQTT] [CONNECTOR] Error:", err);
+            handleStatusChange('error')();
+        });
 
-    const componentWillUnmount = (client) => {
-        if (client) {
-            client.end();
-            client.off('connect', _makeStatusHandler('connected'));
-            client.off('reconnect', _makeStatusHandler('reconnect'));
-            client.off('close', _makeStatusHandler('closed'));
-            client.off('offline', _makeStatusHandler('offline'));
-        }
-    };
-
-    // useEffect hook replaces componentWillMount and componentWillUnmount
-    useEffect(() => {
-        const client = componentWillMount();
-
+        // Cleanup function for component unmount
         return () => {
-            componentWillUnmount(client);
+            console.log("[MQTT] [CONNECTOR] Cleaning up client connection.");
+            if (client) {
+                // Client ko disconnect karne ke liye end() method ka upyog karein
+                client.end();
+                // Event listeners ko hatana
+                client.off('connect', handleStatusChange('connected'));
+                client.off('reconnect', handleStatusChange('reconnect'));
+                client.off('close', handleStatusChange('closed'));
+                client.off('offline', handleStatusChange('offline'));
+                client.off('error', () => {});
+            }
         };
-    }, [mqqt, mqttProps]);
+    }, [mqttProps]); // Dependency array mein mqttProps ko shamil karna
 
-    const getChildContext = () => {
-        return {
-            mqtt: mqttClient,
-            mqttStatus: mqttStatus
-        };
+    // Context value ko dynamically banana
+    const contextValue = {
+        mqtt: mqttClient,
+        mqttStatus: mqttStatus
     };
 
-    const renderConnected = () => {
-        return React.Children.only(children);
-    };
-
-    const render = () => {
-        return renderConnected();
-    };
-
-    // The context provider wraps the children, making the context available
+    // The context provider wraps the children
     return (
-        <MqttContext.Provider value={getChildContext()}>
-            {render()}
+        <MqttContext.Provider value={contextValue}>
+            {children}
         </MqttContext.Provider>
     );
 }

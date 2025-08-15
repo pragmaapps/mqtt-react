@@ -12,7 +12,7 @@ let config = {
     library: {
       name: 'mqtt-react',
       type: 'umd',
-      export: 'default', // Default export ko ensure karne ke liye
+      // export: 'default', // Default export ko ensure karne ke liye
     },
     globalObject: 'this',
   },

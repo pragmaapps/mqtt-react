@@ -34,6 +34,7 @@
     "babel": "inherit"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "mqtt": "5.14.0"
   },
   "peerDependencies": {
