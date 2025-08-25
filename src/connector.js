@@ -17,7 +17,7 @@ export default function Connector({ mqqt, mqttProps, children }) {
             return;
         }
 
-        // MQTT v5 ke anusaar connect function ka upyog
+
         const client = mqtt.connect(mqttProps);
 
         console.log("[MQTT] [CONNECTOR] Client created:", client);
@@ -25,7 +25,7 @@ export default function Connector({ mqqt, mqttProps, children }) {
 
         // Event handlers
         const handleStatusChange = (status) => () => {
-            console.log(`[MQTT] [CONNECTOR] Status changed to: ${status}`);
+            // console.log(`[MQTT] [CONNECTOR] Status changed to: ${status}`);
             setMqttStatus(status);
         };
 
@@ -34,7 +34,7 @@ export default function Connector({ mqqt, mqttProps, children }) {
         client.on('close', handleStatusChange('closed'));
         client.on('offline', handleStatusChange('offline'));
         client.on('error', (err) => {
-            console.error("[MQTT] [CONNECTOR] Error:", err);
+            // console.error("[MQTT] [CONNECTOR] Error:", err);
             handleStatusChange('error')();
         });
 
@@ -42,9 +42,7 @@ export default function Connector({ mqqt, mqttProps, children }) {
         return () => {
             console.log("[MQTT] [CONNECTOR] Cleaning up client connection.");
             if (client) {
-                // Client ko disconnect karne ke liye end() method ka upyog karein
                 client.end();
-                // Event listeners ko hatana
                 client.off('connect', handleStatusChange('connected'));
                 client.off('reconnect', handleStatusChange('reconnect'));
                 client.off('close', handleStatusChange('closed'));
@@ -52,9 +50,8 @@ export default function Connector({ mqqt, mqttProps, children }) {
                 client.off('error', () => {});
             }
         };
-    }, [mqttProps]); // Dependency array mein mqttProps ko shamil karna
+    }, [mqttProps]);
 
-    // Context value ko dynamically banana
     const contextValue = {
         mqtt: mqttClient,
         mqttStatus: mqttStatus

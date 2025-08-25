@@ -22,12 +22,9 @@ export default function subscribe(opts = {}) {
 
             const [data, setData] = useState({});
 
-            // `messageHandler` फ़ंक्शन को memoize करने के लिए `useCallback` का उपयोग।
-            // इससे यह हर रेंडर पर दोबारा नहीं बनेगा।
             const messageHandler = useCallback((msgTopic, message) => {
                 const parsedMessage = parse(message);
-                
-                // कुछ खास topics के messages को ignore करें।
+  
                 if (["isx/stream/file/stats/get", "isx/adp/adp/stats/get", "isx/sensor/status/info/get"].includes(msgTopic)) {
                     return;
                 }
@@ -38,23 +35,19 @@ export default function subscribe(opts = {}) {
                 }));
             }, []);
 
-            // Subscription और cleanup logic को एक ही `useEffect` hook में।
             useEffect(() => {
-                // अगर client उपलब्ध नहीं है, तो कुछ न करें।
+                
                 if (!client) return;
 
-                // Topic(s) को subscribe करें।
                 const topicsToSubscribe = Array.isArray(topic) ? topic : [topic];
                 topicsToSubscribe.forEach(t => client.subscribe(t));
 
-                // `message` event listener जोड़ें।
                 client.on('message', messageHandler);
 
-                // Cleanup फ़ंक्शन जो component unmount होने पर चलता है।
                 return () => {
-                    // Topics से unsubscribe करें।
+
                     topicsToSubscribe.forEach(t => client.unsubscribe(t));
-                    // `message` event listener हटाएँ।
+
                     client.off('message', messageHandler);
                 };
             }, [client, topic, messageHandler]);
@@ -63,8 +56,6 @@ export default function subscribe(opts = {}) {
                 setData(prevData => omit(prevData, [topicToDelete]));
             }, []);
 
-            // Props को memoize करने के लिए `useMemo` का उपयोग।
-            // यह `TargetComponent` के अनावश्यक re-renders को रोकता है।
             const componentProps = useMemo(() => ({
                 ...omit(props, 'client'),
                 data: data,
