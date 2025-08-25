@@ -7,12 +7,10 @@ let config = {
   output: {
     filename: 'mqtt-react.js',
     path: path.resolve(__dirname, 'dist'),
-    // Yahan libraryTarget ko `umd` ke bajaye `commonjs2` aur `umd` dono ke liye configure kiya gaya hai
-    // isse ye `require` aur `import` dono me kaam karega.
     library: {
       name: 'mqtt-react',
       type: 'umd',
-      // export: 'default', // Default export ko ensure karne ke liye
+      // export: 'default',
     },
     globalObject: 'this',
   },
@@ -33,7 +31,7 @@ let config = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react'], // React support ke liye
+            presets: ['@babel/preset-env', '@babel/preset-react'],
           },
         },
       },
@@ -45,8 +43,6 @@ let config = {
   plugins: [],
 };
 
-// UglifyJsPlugin ab purana ho chuka hai. Webpack 4+ mein `optimization.minimize` ka use hota hai.
-// To ab iski jagah ye code use hoga:
 if (config.mode === 'production') {
   config.optimization = {
     minimize: true,

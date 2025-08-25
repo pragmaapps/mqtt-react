@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import { omit } from 'lodash';
-import { MqttContext } from './connector';
+import { Component, createElement } from "react";
+import PropTypes from "prop-types";
+import omit from "object.omit";
+
 
 function parse(message) {
     try {
@@ -12,73 +12,110 @@ function parse(message) {
     }
 }
 
-export default function subscribe(opts = {}) {
+function defaultDispatch(topic, message, packet) {
+    const { state, _isMounted } = this;
+    const m = parse(message);
+    const item = [];
+    let newData = {};
+    item[topic] = m;
+    if (typeof state.data[topic] !== 'undefined') {
+        state.data[topic] = item[topic];
+        newData = {
+            ...state.data
+        };
+    } else {
+        newData = {
+            ...item,
+            ...state.data
+        };
+    }
+    if (_isMounted && topic !== "isx/stream/file/stats/get" && topic !== "isx/adp/adp/stats/get" && topic !== "isx/sensor/status/info/get") {
+        this.setState({ data: newData });
+    }
+};
+
+
+export default function subscribe(opts = { dispatch: defaultDispatch }) {
     const { topic } = opts;
+    const dispatch = (opts.dispatch) ? opts.dispatch : defaultDispatch;
 
     return (TargetComponent) => {
-        const MQTTSubscriber = (props) => {
-            const { mqtt: contextClient } = useContext(MqttContext);
-            const client = props.client || contextClient;
 
-            const [data, setData] = useState({});
+        class MQTTSubscriber extends Component {
+            static propTypes = {
+                client: PropTypes.object
+            }
+            static contextTypes = {
+                mqtt: PropTypes.object
+            };
 
-            // `messageHandler` फ़ंक्शन को memoize करने के लिए `useCallback` का उपयोग।
-            // इससे यह हर रेंडर पर दोबारा नहीं बनेगा।
-            const messageHandler = useCallback((msgTopic, message) => {
-                const parsedMessage = parse(message);
-                
-                // कुछ खास topics के messages को ignore करें।
-                if (["isx/stream/file/stats/get", "isx/adp/adp/stats/get", "isx/sensor/status/info/get"].includes(msgTopic)) {
-                    return;
-                }
+            constructor(props, context) {
+                super(props, context);
 
-                setData(prevData => ({
-                    ...prevData,
-                    [msgTopic]: parsedMessage,
-                }));
-            }, []);
-
-            // Subscription और cleanup logic को एक ही `useEffect` hook में।
-            useEffect(() => {
-                // अगर client उपलब्ध नहीं है, तो कुछ न करें।
-                if (!client) return;
-
-                // Topic(s) को subscribe करें।
-                const topicsToSubscribe = Array.isArray(topic) ? topic : [topic];
-                topicsToSubscribe.forEach(t => client.subscribe(t));
-
-                // `message` event listener जोड़ें।
-                client.on('message', messageHandler);
-
-                // Cleanup फ़ंक्शन जो component unmount होने पर चलता है।
-                return () => {
-                    // Topics से unsubscribe करें।
-                    topicsToSubscribe.forEach(t => client.unsubscribe(t));
-                    // `message` event listener हटाएँ।
-                    client.off('message', messageHandler);
+                this.client = props.client || context.mqtt;
+                this.state = {
+                    subscribed: false,
+                    data: {},
                 };
-            }, [client, topic, messageHandler]);
+                this._isMounted = false;
+                this.handler = dispatch.bind(this)
+                this.client.on('message', this.handler);
+            }
 
-            const deleteTopic = useCallback((topicToDelete) => {
-                setData(prevData => omit(prevData, [topicToDelete]));
-            }, []);
+            //needs to verify the solution of use componentDidMount over componentWillMount
+            // componentWillMount() {
+            //     console.log('[SUBSCRIBE] MQTTSubscriber componentWillMount method');
+            //     this.subscribe();
+            // }
 
-            // Props को memoize करने के लिए `useMemo` का उपयोग।
-            // यह `TargetComponent` के अनावश्यक re-renders को रोकता है।
-            const componentProps = useMemo(() => ({
-                ...omit(props, 'client'),
-                data: data,
-                mqtt: client,
-                deleteTopic: deleteTopic,
-            }), [props, data, client, deleteTopic]);
+            componentDidMount() {
+                this._isMounted = true;
+                this.subscribe();
+            }
 
-            return <TargetComponent {...componentProps} />;
-        };
+            componentWillUnmount() {
+                this._isMounted = false;
+                this.unsubscribe();
+            }
 
-        MQTTSubscriber.propTypes = {
-            client: PropTypes.object
-        };
+            deleteTopic(topic){
+                console.log(topic);
+                let { data } = this.state;
+                delete data[topic];
+                this.setState({data});
+            }
 
+            render() {
+                return createElement(TargetComponent, {
+                    ...omit(this.props, 'client'),
+                    data: this.state.data,
+                    mqtt: this.client,
+                    deleteTopic: this.deleteTopic.bind(this)
+                });
+            }
+
+            subscribe() {
+                if (this._isMounted) {
+                    if (Array.isArray(topic)) {
+                        topic.map((t, key) => {
+                            this.client.subscribe(t);
+                            this.setState({ subscribed: true });
+                        });
+                    } else {
+                        this.client.subscribe(topic);
+                        this.setState({ subscribed: true });
+                    }
+                }
+            }
+
+            unsubscribe() {
+                if (this._isMounted) {
+                    this.client.unsubscribe(topic);
+                    this.setState({ subscribed: false });
+                }
+            }
+
+        }
         return MQTTSubscriber;
-    };
+    }
 }
